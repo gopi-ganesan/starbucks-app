@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express
+  namespace: {{ .Values.mongoExpress.namespace }}
+  labels:
+    app: {{ .Values.mongoExpress.app }}
+spec:
+  type: NodePort
+  selector:
+    app: {{ .Values.mongoExpress.app }}
+  ports:
+    - port: {{ .Values.mongoExpress.port }}
+      targetPort: {{ .Values.mongoExpress.port }}
+      nodePort: {{ .Values.mongoExpress.nodePort }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.mongoExpress.name }}
+  namespace: {{ .Values.mongoExpress.namespace }}
+  labels:
+    app: {{ .Values.mongoExpress.app }}
+spec:
+  replicas: {{ .Values.mongoExpress.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mongoExpress.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mongoExpress.app }}
+    spec:
+      containers:
+        - name: mongo-express
+          image: {{.Values.mongoExpress.image}}
+          ports:
+            - containerPort: {{ .Values.mongoExpress.port }}
+          env:
+            - name: ME_CONFIG_MONGODB_URL
+              value: "mongodb://{{ .Values.secret.mongoUser }}:{{ .Values.secret.mongoPassword }}@{{ .Values.mongodb.serviceName }}.{{ .Values.mongodb.namespace }}.svc.cluster.local:{{ .Values.mongodb.port }}/?authSource=admin"
+            - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: mongo-root-username
+            - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: mongo-root-password
+            - name: ME_CONFIG_BASICAUTH
+              value: "false"

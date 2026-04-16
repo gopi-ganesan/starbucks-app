@@ -1,0 +1,53 @@
+backend:
+  image: starbucks-backend:latest
+  name: starbucks-backend
+  pullPolicy: Never
+  namespace: starbucks-ns
+  app: starbucks-backend
+  tag: latest
+  replicas: 2
+  port: 5000
+  nodePort: 30500
+  targetPort: 5000
+  path: /health
+
+frontend:
+  image: starbucks-frontend:latest
+  tag: latest
+  name: starbucks-frontend
+  pullPolicy: Never
+  namespace: starbucks-ns
+  app: starbucks-frontend
+  port: 80
+  replicas: 2
+  targetPort: 80
+  nodePort: 30080
+  path: /
+
+mongoExpress:
+  name: mongo-express
+  image: mongo-express:1.0.2-20-alpine3.19
+  namespace: starbucks-ns
+  app: mongo-express
+  containerPort: 8081
+  port: 8081
+  nodePort: 30083
+  targetPort: 8081
+  replicas: 3
+
+mongodb:
+  name: mongodb-starbucks-statefulset
+  serviceName: mongodb-sc
+  namespace: starbucks-ns
+  replicas: 2
+  app: mongodb
+  image: mongo:4.4-focal
+  port: 27017
+  database: starbucks
+
+secret:
+  name: mongo-secret
+  namespace: starbucks-ns
+  app: mongo-express
+  mongoUser: admin
+  mongoPassword: password123

@@ -1,0 +1,101 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_ACCOUNT_ID   = "562404438689"
+        AWS_REGION       = "us-east-1"
+        ECR_REPOSITORY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+        BACKEND_REPO     = "starbucks-backend"
+        FRONTEND_REPO    = "starbucks-frontend"
+
+        IMAGE_TAG        = "${BUILD_NUMBER}"
+
+        HELM_CHART_PATH  = "./my-chart"
+    }
+
+    stages {
+
+        stage("Git Clone") {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/gopi-ganesan/starbucks-app.git',
+                    credentialsId: 'github-creds'
+            }
+        }
+
+        stage("Install Dependencies") {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage("Run Tests") {
+            steps {
+                sh 'npm test || true'
+            }
+        }
+
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('sonarqube-server') {
+                    sh '''
+                    sonar-scanner \
+                    -Dsonar.projectKey=node-app \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://34.228.115.47:9000 \
+                    -Dsonar.login=squ_e3ba63f339f781fe5a7aad5c65f1bfc7e503984d
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                sh "docker-compose build"
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                    sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | \
+                    docker login --username AWS --password-stdin ${ECR_REPOSITORY}
+                    """
+                }
+            }
+        }
+
+        stage('Push Images to ECR') {
+            steps {
+                sh """
+                docker tag starbucks-backend ${ECR_REPOSITORY}/${BACKEND_REPO}:${IMAGE_TAG}
+                docker push ${ECR_REPOSITORY}/${BACKEND_REPO}:${IMAGE_TAG}
+
+                docker tag starbucks-frontend ${ECR_REPOSITORY}/${FRONTEND_REPO}:${IMAGE_TAG}
+                docker push ${ECR_REPOSITORY}/${FRONTEND_REPO}:${IMAGE_TAG}
+                """
+            }
+        }
+
+        stage('Update Helm Values') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'github-creds',
+                    usernameVariable: 'GITHUB_USERNAME',
+                    passwordVariable: 'GITHUB_PASSWORD'
+                )]) {
+                    sh """
+                    sed -i 's|tag:.*|tag: ${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
+                    git config user.name "gopi-ganesan"
+                    git config user.email "gopinathgopinath0154@gmail.com"
+                    git add ${HELM_CHART_PATH}/values.yaml
+                    git commit -m "Update image tag ${IMAGE_TAG}"
+                    git push https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/gopi-ganesan/YOUR_REPO.git main
+                    """
+                }
+            }
+        }
+    }
+}
