@@ -10,10 +10,7 @@ pipeline {
         FRONTEND_REPO    = "starbucks-frontend"
 
         IMAGE_TAG        = "${BUILD_NUMBER}"
-
         HELM_CHART_PATH  = "./my-chart"
-
-        SCANNER_HOME=tool 'sonar-scanner'
     }
 
     stages {
@@ -28,27 +25,34 @@ pipeline {
 
         stage("Run Tests") {
             steps {
+                sh 'npm install'
                 sh 'npm test || true'
             }
         }
 
         stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv('sonarqube-server') {
-                    sh '''
-                    sonar-scanner \
-                    -Dsonar.projectKey=starbucks-app \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://54.83.101.105:9000 \
-                    -Dsonar.login=squ_31d839245965752659bba5510209af849614b26e
-                    '''
+                script {
+                    def scannerHome = tool 'SonarScanner'
+
+                    withSonarQubeEnv('SonarQube') {
+                        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                            sh """
+                            ${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=starbucks-app \
+                            -Dsonar.sources=. \
+                            -Dsonar.login=squ_31d839245965752659bba5510209af849614b26e
+                            """
+                        }
+                    }
                 }
             }
         }
+
         stage('Quality Check') {
             steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
                 }
             }
         }
