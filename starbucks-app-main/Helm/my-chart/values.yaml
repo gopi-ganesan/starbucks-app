@@ -1,5 +1,5 @@
 backend:
-  image: starbucks-backend:latest
+  image: 562404438689.dkr.ecr.us-east-1.amazonaws.com/starbucks-backend
   name: starbucks-backend
   pullPolicy: Never
   namespace: starbucks-ns
@@ -12,7 +12,7 @@ backend:
   path: /health
 
 frontend:
-  image: starbucks-frontend:latest
+  image: 562404438689.dkr.ecr.us-east-1.amazonaws.com/starbucks-frontend
   tag: latest
   name: starbucks-frontend
   pullPolicy: Never
@@ -49,5 +49,13 @@ secret:
   name: mongo-secret
   namespace: starbucks-ns
   app: mongo-express
-  mongoUser: admin
-  mongoPassword: password123
+  mongoUser: YWRtaW4K
+  mongoPassword: cGFzc3dvcmQxMjMK
+
+ingress:
+  name: starbucks-ingress
+  namespace: starbucks-ns
+  ingressClassName: alb
+  alb.ingress.kubernetes.io/scheme: internet-facing
+  alb.ingress.kubernetes.io/target-type: ip
+
