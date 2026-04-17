@@ -35,10 +35,10 @@ pipeline {
                 withSonarQubeEnv('sonarqube-server') {
                     sh '''
                     sonar-scanner \
-                    -Dsonar.projectKey=node-app \
+                    -Dsonar.projectKey=starbucks-app \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=http://3.90.247.109:9000/ \
-                    -Dsonar.login=squ_e3ba63f339f781fe5a7aad5c65f1bfc7e503984d
+                    -Dsonar.host.url=http://54.83.101.105:9000 \
+                    -Dsonar.login=squ_31d839245965752659bba5510209af849614b26e
                     '''
                 }
             }
