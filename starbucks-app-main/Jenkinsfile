@@ -46,15 +46,13 @@ pipeline {
                 }
             }
         }
-
         stage('Quality Check') {
             steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: false
                 }
             }
         }
-
         stage('Build Docker Images') {
             steps {
                 sh "docker-compose build"
