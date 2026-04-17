@@ -61,9 +61,7 @@ pipeline {
         }
         stage('Build Docker Images') {
             steps {
-                dir('starbucks-app') {
-                    sh "docker-compose build"
-                }
+                sh "docker-compose -f starbucks-app/docker-compose.yml build"
             }
         }
 
