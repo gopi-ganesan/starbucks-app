@@ -61,7 +61,9 @@ pipeline {
         }
         stage('Build Docker Images') {
             steps {
-                sh "docker-compose build"
+                dir('starbucks-app') {
+                    sh "docker-compose build"
+                }
             }
         }
 
