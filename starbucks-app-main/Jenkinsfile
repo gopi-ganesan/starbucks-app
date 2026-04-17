@@ -12,6 +12,8 @@ pipeline {
         IMAGE_TAG        = "${BUILD_NUMBER}"
 
         HELM_CHART_PATH  = "./my-chart"
+
+        SCANNER_HOME=tool 'sonar-scanner'
     }
 
     stages {
@@ -40,6 +42,13 @@ pipeline {
                     -Dsonar.host.url=http://54.83.101.105:9000 \
                     -Dsonar.login=squ_31d839245965752659bba5510209af849614b26e
                     '''
+                }
+            }
+        }
+        stage('Quality Check') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
                 }
             }
         }
