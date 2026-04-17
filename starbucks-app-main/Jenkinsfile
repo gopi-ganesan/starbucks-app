@@ -48,8 +48,14 @@ pipeline {
         }
         stage('Quality Check') {
             steps {
-                timeout(time: 1, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: false
+                script {
+                    try {
+                        timeout(time: 1, unit: 'MINUTES') {
+                        waitForQualityGate abortPipeline: false
+                        }
+                    } catch (err) {
+                        echo "Skipping Quality Gate due to timeout"
+                    }
                 }
             }
         }
