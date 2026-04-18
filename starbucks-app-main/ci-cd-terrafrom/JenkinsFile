@@ -14,6 +14,10 @@ pipeline {
         )
     }
 
+    environment {
+        TERRAFORM_DIR = 'starbucks-app-main/terraform'  
+    }
+
     stages {
 
         stage('Preparing') {
@@ -27,7 +31,7 @@ pipeline {
                 git(
                     url: 'https://github.com/gopi-ganesan/starbucks-app.git',
                     branch: 'main',
-                    credentialsId: 'github-creds'   
+                    credentialsId: 'github-creds'
                 )
             }
         }
@@ -36,10 +40,10 @@ pipeline {
             steps {
                 sh '''
                     echo "Workspace: $(pwd)"
-                    ls -la
-                    ls -la ci-cd-terrafrom/ || echo "ci-cd-terrafrom NOT FOUND"
-                    ls -la ci-cd-terrafrom/eks/ || echo "eks folder NOT FOUND"
-                    find . -name "*.tf" 2>/dev/null | head -20
+                    echo "Terraform files:"
+                    find . -name "*.tf" 2>/dev/null
+                    echo "Terraform dir contents:"
+                    ls -la starbucks-app-main/terraform/
                 '''
             }
         }
@@ -52,7 +56,7 @@ pipeline {
                 ]]) {
                     sh '''
                         export AWS_DEFAULT_REGION=us-east-1
-                        terraform -chdir=ci-cd-terrafrom/eks init  
+                        terraform -chdir=${TERRAFORM_DIR} init   
                     '''
                 }
             }
@@ -62,7 +66,7 @@ pipeline {
             steps {
                 withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
                     sh '''
-                        terraform -chdir=ci-cd-terrafrom/eks validate 
+                        terraform -chdir=${TERRAFORM_DIR} validate 
                     '''
                 }
             }
@@ -74,21 +78,21 @@ pipeline {
                     script {
                         if (params.terraform_action == 'plan') {
                             sh """
-                                terraform -chdir=ci-cd-terrafrom/eks plan \
+                                terraform -chdir=${TERRAFORM_DIR} plan \
                                   -var='environment=${params.environment}' \
                                   -out=tfplan
                             """
                         }
                         else if (params.terraform_action == 'apply') {
                             sh """
-                                terraform -chdir=ci-cd-terrafrom/eks apply \
+                                terraform -chdir=${TERRAFORM_DIR} apply \
                                   -var='environment=${params.environment}' \
                                   -auto-approve
                             """
                         }
                         else if (params.terraform_action == 'destroy') {
                             sh """
-                                terraform -chdir=ci-cd-terrafrom/eks destroy \
+                                terraform -chdir=${TERRAFORM_DIR} destroy \
                                   -var='environment=${params.environment}' \
                                   -auto-approve
                             """
