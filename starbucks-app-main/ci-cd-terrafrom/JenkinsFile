@@ -34,8 +34,14 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
-                    sh 'terraform -chdir=ci-cd-terraform/eks init'
+                withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-credentials'
+                    ]]) {
+                    sh '''
+                        export AWS_DEFAULT_REGION=us-east-1
+                        terraform -chdir=ci-cd-terraform/eks init
+                    '''
                 }
             }
         }
