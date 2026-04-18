@@ -99,7 +99,7 @@ pipeline {
                     passwordVariable: 'GITHUB_PASSWORD'
                 )]) {
                     sh """
-                    sed -i "s|tag:.*|tag: ${IMAGE_TAG}|g" starbucks-kubernetes/helm/my-chart/values.yaml
+                    sed -i "s|tag:.*|tag: '"${IMAGE_TAG}"'|g" Helm/my-chart/values.yaml
                     git config user.name "$GITHUB_USERNAME"
                     git config user.password "$GITHUB_PASSWORD"
                     git add ${HELM_CHART_PATH}/values.yaml
