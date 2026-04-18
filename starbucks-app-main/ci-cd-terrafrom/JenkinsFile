@@ -5,7 +5,7 @@ pipeline {
         string(
             name: 'environment',
             defaultValue: 'dev',
-            description: 'Environment to deploy (dev, staging, prod)'
+            description: 'Environment to deploy'
         )
         choice(
             name: 'terraform_action',
@@ -15,7 +15,8 @@ pipeline {
     }
 
     environment {
-        TERRAFORM_DIR = 'starbucks-app-main/terraform'  
+        TERRAFORM_DIR = 'starbucks-app-main/terraform'
+        AWS_REGION    = 'us-east-1'
     }
 
     stages {
@@ -40,23 +41,25 @@ pipeline {
             steps {
                 sh '''
                     echo "Workspace: $(pwd)"
-                    echo "Terraform files:"
-                    find . -name "*.tf" 2>/dev/null
-                    echo "Terraform dir contents:"
                     ls -la starbucks-app-main/terraform/
+                    find . -name "*.tf" 2>/dev/null
                 '''
             }
         }
 
         stage('Terraform Init') {
             steps {
-                withCredentials([[
+                withCredentials([[           // ✅ withCredentials works!
                     $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-credentials'
+                    credentialsId: 'aws-credentials',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                 ]]) {
                     sh '''
-                        export AWS_DEFAULT_REGION=us-east-1
-                        terraform -chdir=${TERRAFORM_DIR} init   
+                        export AWS_DEFAULT_REGION=${AWS_REGION}
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        terraform -chdir=${TERRAFORM_DIR} init
                     '''
                 }
             }
@@ -64,9 +67,17 @@ pipeline {
 
         stage('Terraform Validate') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                withCredentials([[           // ✅ replaced withAWS
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-credentials',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
                     sh '''
-                        terraform -chdir=${TERRAFORM_DIR} validate 
+                        export AWS_DEFAULT_REGION=${AWS_REGION}
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        terraform -chdir=${TERRAFORM_DIR} validate
                     '''
                 }
             }
@@ -74,27 +85,38 @@ pipeline {
 
         stage('Terraform Action') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                withCredentials([[           
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-credentials',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
                     script {
+                        def tfCmd = "terraform -chdir=${TERRAFORM_DIR}"
+                        def tfVar = "-var='environment=${params.environment}'"
+
                         if (params.terraform_action == 'plan') {
                             sh """
-                                terraform -chdir=${TERRAFORM_DIR} plan \
-                                  -var='environment=${params.environment}' \
-                                  -out=tfplan
+                                export AWS_DEFAULT_REGION=${AWS_REGION}
+                                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                ${tfCmd} plan ${tfVar} -out=tfplan
                             """
                         }
                         else if (params.terraform_action == 'apply') {
                             sh """
-                                terraform -chdir=${TERRAFORM_DIR} apply \
-                                  -var='environment=${params.environment}' \
-                                  -auto-approve
+                                export AWS_DEFAULT_REGION=${AWS_REGION}
+                                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                ${tfCmd} apply ${tfVar} -auto-approve
                             """
                         }
                         else if (params.terraform_action == 'destroy') {
                             sh """
-                                terraform -chdir=${TERRAFORM_DIR} destroy \
-                                  -var='environment=${params.environment}' \
-                                  -auto-approve
+                                export AWS_DEFAULT_REGION=${AWS_REGION}
+                                export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                                export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                                ${tfCmd} destroy ${tfVar} -auto-approve
                             """
                         }
                     }
@@ -105,10 +127,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully! '
+            echo 'Pipeline executed successfully! ✅'
         }
         failure {
-            echo 'Pipeline failed! '
+            echo 'Pipeline failed! ❌'
         }
     }
 }
