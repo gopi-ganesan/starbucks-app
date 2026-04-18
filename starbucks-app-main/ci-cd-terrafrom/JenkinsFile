@@ -53,27 +53,26 @@ pipeline {
                 withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
                     script {
                         if (params.terraform_action == 'plan') {
-                            sh 'terraform -chdir=ci-cd-terraform/eks plan -out=tfplan'
+                            sh "terraform -chdir=ci-cd-terraform/eks plan -var='environment=${params.environment}' -out=tfplan"
                         } 
                         else if (params.terraform_action == 'apply') {
-                            sh 'terraform -chdir=ci-cd-terraform/eks apply -auto-approve'
+                            sh "terraform -chdir=ci-cd-terraform/eks apply -var='environment=${params.environment}' -auto-approve"
                         } 
                         else if (params.terraform_action == 'destroy') {
-                            sh 'terraform -chdir=ci-cd-terraform/eks destroy -auto-approve'
+                            sh "terraform -chdir=ci-cd-terraform/eks destroy -var='environment=${params.environment}' -auto-approve"
                         }
                     }
                 }
             }
         }
     }
-}
 
     post {
         success {
-            echo 'Pipeline executed successfully ✅'
+            echo 'Pipeline executed successfully '
         }
         failure {
-            echo 'Pipeline failed ❌'
+            echo 'Pipeline failed '
         }
     }
 }
