@@ -1,5 +1,5 @@
 pipeline {
-    agent any 
+    agent any
 
     parameters {
         string(
@@ -27,20 +27,32 @@ pipeline {
                 git(
                     url: 'https://github.com/gopi-ganesan/starbucks-app.git',
                     branch: 'main',
-                    credentialsId: 'github-creds'
+                    credentialsId: 'github-creds'   
                 )
+            }
+        }
+
+        stage('Debug Workspace') {
+            steps {
+                sh '''
+                    echo "Workspace: $(pwd)"
+                    ls -la
+                    ls -la ci-cd-terrafrom/ || echo "ci-cd-terrafrom NOT FOUND"
+                    ls -la ci-cd-terrafrom/eks/ || echo "eks folder NOT FOUND"
+                    find . -name "*.tf" 2>/dev/null | head -20
+                '''
             }
         }
 
         stage('Terraform Init') {
             steps {
                 withCredentials([[
-                        $class: 'AmazonWebServicesCredentialsBinding',
-                        credentialsId: 'aws-credentials'
-                    ]]) {
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-credentials'
+                ]]) {
                     sh '''
                         export AWS_DEFAULT_REGION=us-east-1
-                        terraform -chdir=ci-cd-terraform/eks init
+                        terraform -chdir=ci-cd-terrafrom/eks init  
                     '''
                 }
             }
@@ -49,7 +61,9 @@ pipeline {
         stage('Terraform Validate') {
             steps {
                 withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
-                    sh 'terraform -chdir=ci-cd-terraform/eks validate'
+                    sh '''
+                        terraform -chdir=ci-cd-terrafrom/eks validate 
+                    '''
                 }
             }
         }
@@ -59,13 +73,25 @@ pipeline {
                 withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
                     script {
                         if (params.terraform_action == 'plan') {
-                            sh "terraform -chdir=ci-cd-terraform/eks plan -var='environment=${params.environment}' -out=tfplan"
-                        } 
+                            sh """
+                                terraform -chdir=ci-cd-terrafrom/eks plan \
+                                  -var='environment=${params.environment}' \
+                                  -out=tfplan
+                            """
+                        }
                         else if (params.terraform_action == 'apply') {
-                            sh "terraform -chdir=ci-cd-terraform/eks apply -var='environment=${params.environment}' -auto-approve"
-                        } 
+                            sh """
+                                terraform -chdir=ci-cd-terrafrom/eks apply \
+                                  -var='environment=${params.environment}' \
+                                  -auto-approve
+                            """
+                        }
                         else if (params.terraform_action == 'destroy') {
-                            sh "terraform -chdir=ci-cd-terraform/eks destroy -var='environment=${params.environment}' -auto-approve"
+                            sh """
+                                terraform -chdir=ci-cd-terrafrom/eks destroy \
+                                  -var='environment=${params.environment}' \
+                                  -auto-approve
+                            """
                         }
                     }
                 }
@@ -75,10 +101,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully '
+            echo 'Pipeline executed successfully! '
         }
         failure {
-            echo 'Pipeline failed '
+            echo 'Pipeline failed! '
         }
     }
 }
