@@ -27,7 +27,7 @@ pipeline {
                 git(
                     url: 'https://github.com/gopi-ganesan/starbucks-app.git',
                     branch: 'main',
-                    credentialsId: 'github-token'
+                    credentialsId: 'github-creds'
                 )
             }
         }
