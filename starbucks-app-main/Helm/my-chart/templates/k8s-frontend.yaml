@@ -48,10 +48,9 @@ metadata:
   name: frontend-svc
   namespace: {{ .Values.frontend.namespace }}
 spec:
-  type: NodePort
+  type:  LoadBalancer
   selector:
     app: {{ .Values.frontend.app }}
   ports:
     - port: {{ .Values.frontend.port }}
       targetPort: {{ .Values.frontend.targetPort }}
-      nodePort: {{ .Values.frontend.nodePort }}

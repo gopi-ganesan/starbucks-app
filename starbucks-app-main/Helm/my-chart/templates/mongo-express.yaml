@@ -7,13 +7,12 @@ metadata:
   labels:
     app: {{ .Values.mongoExpress.app }}
 spec:
-  type: NodePort
+  type:  LoadBalancer
   selector:
     app: {{ .Values.mongoExpress.app }}
   ports:
     - port: {{ .Values.mongoExpress.port }}
       targetPort: {{ .Values.mongoExpress.port }}
-      nodePort: {{ .Values.mongoExpress.nodePort }}
 ---
 apiVersion: apps/v1
 kind: Deployment

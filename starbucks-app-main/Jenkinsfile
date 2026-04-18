@@ -99,12 +99,12 @@ pipeline {
                     passwordVariable: 'GITHUB_PASSWORD'
                 )]) {
                     sh """
-                    sed -i 's|tag:.*|tag: ${IMAGE_TAG}|g' ${HELM_CHART_PATH}/values.yaml
-                    git config user.name "gopi-ganesan"
-                    git config user.email "gopinathgopinath0154@gmail.com"
+                    sed -i "s|tag:.*|tag: ${IMAGE_TAG}|g" ${HELM_CHART_PATH}/values.yaml
+                    git config user.name "$GITHUB_USERNAME"
+                    git config user.password "$GITHUB_PASSWORD"
                     git add ${HELM_CHART_PATH}/values.yaml
                     git commit -m "Update image tag ${IMAGE_TAG}"
-                    git push https://${GITHUB_USERNAME}:${GITHUB_PASSWORD}@github.com/gopi-ganesan/YOUR_REPO.git main
+                    git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/your-repo.git main
                     """
                 }
             }

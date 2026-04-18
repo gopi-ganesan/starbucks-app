@@ -1,7 +1,7 @@
 backend:
   image: 562404438689.dkr.ecr.us-east-1.amazonaws.com/starbucks-backend
   name: starbucks-backend
-  pullPolicy: Never
+  pullPolicy:  Always
   namespace: starbucks-ns
   app: starbucks-backend
   tag: latest
@@ -15,7 +15,7 @@ frontend:
   image: 562404438689.dkr.ecr.us-east-1.amazonaws.com/starbucks-frontend
   tag: latest
   name: starbucks-frontend
-  pullPolicy: Never
+  pullPolicy:  Always
   namespace: starbucks-ns
   app: starbucks-frontend
   port: 80
