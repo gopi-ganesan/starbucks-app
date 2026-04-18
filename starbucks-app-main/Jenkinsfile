@@ -90,23 +90,23 @@ pipeline {
                 """
             }
         }
-
         stage('Update Helm Values') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'github-creds',
                     usernameVariable: 'GITHUB_USERNAME',
                     passwordVariable: 'GITHUB_PASSWORD'
-                )]) {
-                    sh """
-                    cd starbucks-app-main && sed -i "s|tag:.*|tag: ${IMAGE_TAG}|g" Helm/my-chart/values.yaml
-                    git config user.name "$GITHUB_USERNAME"
-                    git config user.password "$GITHUB_PASSWORD"
-                    git add ${HELM_CHART_PATH}/values.yaml
-                    git commit -m "Update image tag ${IMAGE_TAG}"
-                    git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/your-repo.git main
-                    """
-                }
+                    )]){
+                        sh '''
+                        cd starbucks-app-main
+                        sed -i "s|tag:.*|tag: '"${IMAGE_TAG}"'|g" Helm/my-chart/values.yaml
+                        git config user.name "$GITHUB_USERNAME"
+                        git config user.email "devops@example.com"
+                        git add Helm/my-chart/values.yaml
+                        git commit -m "Update image tag ${IMAGE_TAG}"
+                        git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/your-repo.git main
+                        '''
+                    }
             }
         }
     }
