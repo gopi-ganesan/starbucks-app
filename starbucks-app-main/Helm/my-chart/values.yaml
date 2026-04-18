@@ -4,7 +4,7 @@ backend:
   pullPolicy:  Always
   namespace: starbucks-ns
   app: starbucks-backend
-  tag: latest
+  tag: '39'
   replicas: 2
   port: 5000
   nodePort: 30500
@@ -13,7 +13,7 @@ backend:
 
 frontend:
   image: 562404438689.dkr.ecr.us-east-1.amazonaws.com/starbucks-frontend
-  tag: latest
+  tag: '39'
   name: starbucks-frontend
   pullPolicy:  Always
   namespace: starbucks-ns
