@@ -104,7 +104,7 @@ pipeline {
                         git config user.email "devops@example.com"
                         git add Helm/my-chart/values.yaml
                         git commit -m "Update image tag ${IMAGE_TAG}"
-                        git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/gopinath/starbucks-app.git main
+                        git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/gopi-ganesan/starbucks-app.git main
                         '''
                     }
             }
