@@ -1,20 +1,18 @@
 pipeline {
     agent any 
 
-    properties([
-        parameters([
-            string(
-                defaultValue: 'dev',    
-                name: 'environment',
-                description: 'Environment to deploy to (e.g., dev, staging, prod)'
-            ),
-            choice(
-                choices: ['plan', 'apply', 'destroy'],
-                name: 'terraform_action',
-                description: 'Choose the Terraform action to perform'
-            )   
-        ])
-    ])
+    parameters {
+        string(
+            name: 'environment',
+            defaultValue: 'dev',
+            description: 'Environment to deploy (dev, staging, prod)'
+        )
+        choice(
+            name: 'terraform_action',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Terraform action'
+        )
+    }
 
     stages {
 
@@ -27,7 +25,7 @@ pipeline {
         stage('Git Checkout') {
             steps {
                 git(
-                    url: 'YOUR_REPO_URL',
+                    url: 'https://github.com/gopi-ganesan/starbucks-app.git',
                     branch: 'main',
                     credentialsId: 'github-token'
                 )
@@ -58,13 +56,7 @@ pipeline {
                             sh 'terraform -chdir=eks/ plan -out=tfplan'
                         } 
                         else if (params.terraform_action == 'apply') {
-                            sh '''
-                                if [ ! -f eks/tfplan ]; then
-                                    echo "No tfplan found. Running plan first..."
-                                    terraform -chdir=eks/ plan -out=tfplan
-                                fi
-                                terraform -chdir=eks/ apply -auto-approve tfplan
-                            '''
+                            sh 'terraform -chdir=eks/ apply -auto-approve'
                         } 
                         else if (params.terraform_action == 'destroy') {
                             sh 'terraform -chdir=eks/ destroy -auto-approve'
