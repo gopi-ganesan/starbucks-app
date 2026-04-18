@@ -1,57 +1,72 @@
-pipeline{
-    angent any 
-    propertie([
+pipeline {
+    agent any 
+
+    properties([
         parameters([
             string(
                 defaultValue: 'dev',    
                 name: 'environment',
-                description: 'Environment to deploy to (e.g., dev, staging, prod)',
+                description: 'Environment to deploy to (e.g., dev, staging, prod)'
             ),
             choice(
-                choices:['plan','apply','destroy'],
-                name: 'terrafrom_action',
-                description: 'Choose the Terraform action to perform',
+                choices: ['plan', 'apply', 'destroy'],
+                name: 'terraform_action',
+                description: 'Choose the Terraform action to perform'
             )   
         ])
     ])
-    stages{
-        stage('preparing'){
-            steps{
-                sh'echo preparing '
+
+    stages {
+
+        stage('Preparing') {
+            steps {
+                sh 'echo preparing'
             }
         }
-        stage('git checkout'){
-            steps{
+
+        stage('Git Checkout') {
+            steps {
                 git(
-                    url:'',
-                    branch:'',
-                    credentialsId:'github-token',
+                    url: 'YOUR_REPO_URL',
+                    branch: 'main',
+                    credentialsId: 'github-token'
                 )
             }
         }
-        stage('terrafrom init'){
-            steps{
-                withAWS(credentials:'aws-credentials', region:'us-east-1'){
+
+        stage('Terraform Init') {
+            steps {
+                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
                     sh 'terraform -chdir=eks/ init'
                 }
             }
         }
-        stage('validate terraform'){
-            steps{
-                withAWS(credentials:'aws-credentials', region:'us-east-1'){
+
+        stage('Terraform Validate') {
+            steps {
+                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
                     sh 'terraform -chdir=eks/ validate'
                 }
             }
         }
-        stage('terrafrom action'){
-            withAWS(credentials:'aws-credentials', region:'us-east-1'){
-                steps{
-                    script{
-                        if(params.terrafrom_action == 'plan'){
+
+        stage('Terraform Action') {
+            steps {
+                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                    script {
+                        if (params.terraform_action == 'plan') {
                             sh 'terraform -chdir=eks/ plan -out=tfplan'
-                        } else if(params.terrafrom_action == 'apply'){
-                            sh 'terraform -chdir=eks/ apply -auto-approve tfplan'
-                        } else if(params.terrafrom_action == 'destroy'){
+                        } 
+                        else if (params.terraform_action == 'apply') {
+                            sh '''
+                                if [ ! -f eks/tfplan ]; then
+                                    echo "No tfplan found. Running plan first..."
+                                    terraform -chdir=eks/ plan -out=tfplan
+                                fi
+                                terraform -chdir=eks/ apply -auto-approve tfplan
+                            '''
+                        } 
+                        else if (params.terraform_action == 'destroy') {
                             sh 'terraform -chdir=eks/ destroy -auto-approve'
                         }
                     }
