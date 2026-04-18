@@ -62,7 +62,8 @@ pipeline {
         stage('Build Docker Images') {
             steps {
                 dir('starbucks-app-main') {
-                    sh "docker-compose build"
+                    sh "docker build -t starbucks-backend ./backend"
+                    sh "docker build -t starbucks-frontend ./frontend"
                 }
             }
         }
