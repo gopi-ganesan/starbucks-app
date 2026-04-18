@@ -14,11 +14,15 @@ pipeline {
         )
     }
 
+    environment {
+        AWS_DEFAULT_REGION = 'us-east-1'
+    }
+
     stages {
 
         stage('Preparing') {
             steps {
-                sh 'echo preparing'
+                sh 'echo Preparing pipeline...'
             }
         }
 
@@ -34,36 +38,68 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
-                    sh 'terraform -chdir=eks/ init'
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                        terraform -chdir=ci-cd-terrafrom/eks init
+                    '''
                 }
             }
         }
 
         stage('Terraform Validate') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
-                    sh 'terraform -chdir=eks/ validate'
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
+                    sh '''
+                        terraform -chdir=ci-cd-terrafrom/eks validate
+                    '''
                 }
             }
         }
 
         stage('Terraform Action') {
             steps {
-                withAWS(credentials: 'aws-credentials', region: 'us-east-1') {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'aws-credentials']
+                ]) {
                     script {
                         if (params.terraform_action == 'plan') {
-                            sh 'terraform -chdir=eks/ plan -out=tfplan'
+                            sh '''
+                                terraform -chdir=ci-cd-terrafrom/eks plan -out=tfplan
+                            '''
                         } 
                         else if (params.terraform_action == 'apply') {
-                            sh 'terraform -chdir=eks/ apply -auto-approve'
+                            sh '''
+                                if [ ! -f ci-cd-terrafrom/eks/tfplan ]; then
+                                    echo "No tfplan found, running plan first..."
+                                    terraform -chdir=ci-cd-terrafrom/eks plan -out=tfplan
+                                fi
+                                terraform -chdir=ci-cd-terrafrom/eks apply -auto-approve tfplan
+                            '''
                         } 
                         else if (params.terraform_action == 'destroy') {
-                            sh 'terraform -chdir=eks/ destroy -auto-approve'
+                            sh '''
+                                terraform -chdir=ci-cd-terrafrom/eks destroy -auto-approve
+                            '''
                         }
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline executed successfully ✅'
+        }
+        failure {
+            echo 'Pipeline failed ❌'
         }
     }
 }
