@@ -58,8 +58,9 @@ resource "aws_route_table" "private_rt" {
   vpc_id = aws_vpc.main.id  
 
   route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_gw[count.index].id #the is an nat gateway
+    cidr_block = "0.0.0.0/0"
+
+    nat_gateway_id = var.single_nat_gateway ? aws_nat_gateway.nat_gw[0].id : aws_nat_gateway.nat_gw[count.index].id
   }
 
   tags = merge(var.tags, {
@@ -80,7 +81,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_eip" "nat_eip" {
-  count  = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnets)) : 0
+  count  = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnets)) : 0
   domain = "vpc"
 
   depends_on = [aws_internet_gateway.igw]
@@ -99,9 +100,11 @@ resource "aws_internet_gateway" "igw" {
 }
 
 resource "aws_nat_gateway" "nat_gw" {
-  count         = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnets)) : 0
-  allocation_id = aws_eip.nat_eip[count.index].id
-  subnet_id = aws_subnet.public_1a[count.index].id
-  depends_on    = [aws_internet_gateway.igw]
-}
+  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnets)) : 0
 
+  allocation_id = aws_eip.nat_eip[count.index].id
+
+  subnet_id = var.single_nat_gateway? aws_subnet.public_1a[0].id : aws_subnet.public_1a[count.index].id
+
+  depends_on = [aws_internet_gateway.igw]
+}
