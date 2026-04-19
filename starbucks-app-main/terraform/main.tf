@@ -32,7 +32,7 @@ module "eks" {
   version = "~> 21.0"
 
   name               = "starter-eks-cluster"
-  kubernetes_version = "1.29"
+  kubernetes_version = "1.30"
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -54,9 +54,9 @@ module "eks" {
     example = {
       instance_types = ["t3.medium"]
 
-      min_size     = 1
+      min_size     = 2
       max_size     = 2
-      desired_size = 1
+      desired_size = 2
 
       ami_type       = "AL2_x86_64"
       capacity_type  = "ON_DEMAND"
