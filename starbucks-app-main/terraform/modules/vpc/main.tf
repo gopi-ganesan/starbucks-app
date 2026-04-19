@@ -108,3 +108,13 @@ resource "aws_nat_gateway" "nat_gw" {
 
   depends_on = [aws_internet_gateway.igw]
 }
+
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket"
+    key            = "eks/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock"
+    encrypt        = true
+  }
+}
