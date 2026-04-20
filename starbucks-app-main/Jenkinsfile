@@ -98,9 +98,6 @@ pipeline {
                     passwordVariable: 'GITHUB_PASSWORD'
                     )]) {
                     sh """
-                       git clone \
-                        https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git \
-                       argocd-starbucks
                         cd argocd-starbucks
                         git remote set-url origin \
                         https://\$GITHUB_USERNAME:\$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git
