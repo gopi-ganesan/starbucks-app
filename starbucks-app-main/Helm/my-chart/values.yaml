@@ -33,7 +33,7 @@ mongoExpress:
   port: 8081
   nodePort: 30083
   targetPort: 8081
-  replicas: 3
+  replicas: 2
 
 mongodb:
   name: mongodb-starbucks-statefulset
