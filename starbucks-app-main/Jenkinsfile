@@ -39,7 +39,7 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=starbucks-app \
                             -Dsonar.sources=. \
-                            -Dsonar.login=squ_31d839245965752659bba5510209af849614b26e
+                            -Dsonar.login=squ_4c369d25ba7f3a7b95ccc4ed0eba8134a1ed1faa
                             """
                         }
                     }
@@ -98,6 +98,9 @@ pipeline {
                     passwordVariable: 'GITHUB_PASSWORD'
                     )]) {
                     sh """
+                        # git clone \
+                        #https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git \
+                        # argocd-starbucks
                         cd argocd-starbucks
                         git remote set-url origin \
                         https://\$GITHUB_USERNAME:\$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git
