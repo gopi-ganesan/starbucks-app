@@ -96,19 +96,24 @@ pipeline {
                     credentialsId: 'github-creds',
                     usernameVariable: 'GITHUB_USERNAME',
                     passwordVariable: 'GITHUB_PASSWORD'
-                    )]){
-                        sh '''
+                    )]) {
+                    sh """
                         cd starbucks-app-main
+                        git remote set-url origin \
+                        https://\$GITHUB_USERNAME:\$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git
                         git fetch origin
                         git reset --hard origin/main
-                        sed -i "s|tag:.*|tag: '"${IMAGE_TAG}"'|g" Helm/my-chart/values.yaml         
-                        git config user.name "$GITHUB_USERNAME"
+                        sed -i "s|tag:.*|tag: ${IMAGE_TAG}|g" Helm/my-chart/values.yaml
+                        grep "tag:" Helm/my-chart/values.yaml
+                        git config user.name "\$GITHUB_USERNAME"
                         git config user.email "devops@example.com"
                         git add Helm/my-chart/values.yaml
-                        git commit -m "Update image tag ${IMAGE_TAG}"
-                        git push https://$GITHUB_USERNAME:$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git main
-                        '''
-                    }
+                        git commit -m "ci: update image tag to ${IMAGE_TAG} [skip ci]" || \
+                        echo "Nothing to commit"
+                        git pull --rebase origin main
+                        git push origin main
+                    """
+                }
             }
         }
     }
