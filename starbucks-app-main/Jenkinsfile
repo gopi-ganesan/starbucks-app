@@ -99,7 +99,9 @@ pipeline {
                     )]){
                         sh '''
                         cd starbucks-app-main
-                        sed -i "s|tag:.*|tag: '"${IMAGE_TAG}"'|g" Helm/my-chart/values.yaml
+                        git fetch origin
+                        git reset --hard origin/main
+                        sed -i "s|tag:.*|tag: '"${IMAGE_TAG}"'|g" Helm/my-chart/values.yaml         
                         git config user.name "$GITHUB_USERNAME"
                         git config user.email "devops@example.com"
                         git add Helm/my-chart/values.yaml
