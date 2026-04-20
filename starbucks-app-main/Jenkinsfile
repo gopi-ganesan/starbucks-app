@@ -98,7 +98,7 @@ pipeline {
                     passwordVariable: 'GITHUB_PASSWORD'
                     )]) {
                     sh """
-                        cd starbucks-app-main
+                        cd argocd-starbucks
                         git remote set-url origin \
                         https://\$GITHUB_USERNAME:\$GITHUB_PASSWORD@github.com/gopi-ganesan/argocd-starbucks.git
                         git fetch origin
