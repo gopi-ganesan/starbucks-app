@@ -37,7 +37,7 @@ pipeline {
                         withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                             sh """
                             ${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=starbucks-app \
+                            -Dsonar.projectKey=starbucks-app   \
                             -Dsonar.sources=. \
                             -Dsonar.login=squ_e1428fb52fa87337d55d6242ace67718a2eba1cc
                             """
