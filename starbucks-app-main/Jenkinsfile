@@ -39,7 +39,7 @@ pipeline {
                             ${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=starbucks-app \
                             -Dsonar.sources=. \
-                            -Dsonar.login=sqp_5ba740b46e2a0da90f120f1fe4fd1b6de5d03a99
+                            -Dsonar.login=sqp_d502187ad60cdd5661fd9c538fb3903eb3a7baea
                             """
                         }
                     }
