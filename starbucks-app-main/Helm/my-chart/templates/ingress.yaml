@@ -5,13 +5,8 @@ metadata:
   namespace: {{ .Values.ingress.namespace }}
   annotations:
     kubernetes.io/ingress.class: {{ .Values.ingress.ingressClassName }}
-    alb.ingress.kubernetes.io/scheme: {{ .Values.ingress.alb.ingress.kubernetes.io/scheme }}
-    alb.ingress.kubernetes.io/target-type: {{ .Values.ingress.alb.ingress.kubernetes.io/target-type }}
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: '15'
-    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: '5'
-    alb.ingress.kubernetes.io/healthy-threshold-count: '2'
-    alb.ingress.kubernetes.io/unhealthy-threshold-count: '3'
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+
 spec:
   ingressClassName: {{ .Values.ingress.ingressClassName }}
   rules:
