@@ -31,7 +31,7 @@ module "eks" {
   version = "~> 21.0"
 
   name               = "starter-eks-cluster"
-  kubernetes_version = "1.30"
+  kubernetes_version = "1.33"
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
@@ -45,6 +45,13 @@ module "eks" {
     }
     kube-proxy = {
       most_recent = true
+    }
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent    = true
+      before_compute = true
     }
     vpc-cni = {
       most_recent    = true
